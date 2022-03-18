@@ -40,7 +40,7 @@ class SmilesLoader(nanome.PluginInstance):
         self.update_menu(self.menu)
 
     def load_smiles(self, btn=None):
-        smiles = self.inp_smiles.input_text
+        smiles = self.inp_smiles.input_text.strip()
         mol = Chem.MolFromSmiles(smiles)
         if mol is None:
             self.send_notification(enums.NotificationTypes.error, 'RDKit was unable to load this SMILES')
@@ -52,7 +52,7 @@ class SmilesLoader(nanome.PluginInstance):
         with open(self.temp_sdf.name, 'w') as f:
             f.write(Chem.MolToMolBlock(mol))
 
-        self.send_files_to_load((self.temp_sdf.name, smiles))
+        self.send_files_to_load((self.temp_sdf.name, smiles.replace('/', '_')))
         self.inp_smiles.input_text = ''
         self.update_content(self.inp_smiles)
 
