@@ -3,7 +3,7 @@
 echo "./deploy.sh $*" > redeploy.sh
 chmod +x redeploy.sh
 
-$container_name=smiles-loader
+container_name=smiles-loader
 existing=$(docker ps -aqf name=$container_name)
 if [ -n "$existing" ]; then
     echo "removing existing container"
