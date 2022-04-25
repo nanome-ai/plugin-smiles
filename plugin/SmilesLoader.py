@@ -14,7 +14,8 @@ class SmilesLoader(nanome.PluginInstance):
         self.integration.export_smiles = self.integration_export
         self.integration.import_smiles = self.integration_import
 
-        self.temp_sdf = tempfile.NamedTemporaryFile(delete=False, suffix='.sdf')
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.temp_sdf = tempfile.NamedTemporaryFile(delete=False, suffix='.sdf', dir=self.temp_dir.name)
 
         menu = Menu()
         self.menu = menu
