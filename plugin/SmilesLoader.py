@@ -110,7 +110,8 @@ class SmilesLoader(nanome.PluginInstance):
             for mol in Chem.SDMolSupplier(self.temp_sdf.name):
                 if mol is None:
                     continue
-                smiles = Chem.MolToSmiles(mol)
+                Chem.AssignStereochemistryFrom3D(mol)
+                smiles = Chem.MolToSmiles(mol, isomericSmiles=True)
                 lines.append(smiles)
 
             strings.append('\n'.join(lines))
