@@ -53,52 +53,19 @@ class SmilesLoader(nanome.PluginInstance):
 
     def integration_import(self, request):
         strings = request.get_args()
-        complexes = []
-
-        for string in strings:
-            mols = []
-            with Chem.SDWriter(self.temp_sdf.name) as w:
-                for smiles in string.split('\n'):
-                    mol = self.smiles_to_mol(smiles)
-                    if mol is None:
-                        continue
-                    mols.append(mol)
-                    w.write(mol)
-
-            if not mols:
-                continue
-
-            complex = Complex.io.from_sdf(path=self.temp_sdf.name)
-            complex.name = 'SMILES ' + AllChem.CalcMolFormula(mols[0])
-            complexes.append(complex)
-
+        complexes = self.strings_to_complexes(strings)
         request.send_response(complexes)
 
     def load_from_input(self, btn=None):
         smiles = self.inp_smiles.input_text
-        mol = self.smiles_to_mol(smiles)
+        complexes = self.strings_to_complexes([smiles])
 
-        if mol is None:
-            msg = 'RDKit could not parse the SMILES.'
-            self.send_notification(NotificationTypes.error, msg)
-        else:
-            with Chem.SDWriter(self.temp_sdf.name) as w:
-                w.write(mol)
-            name = 'SMILES ' + AllChem.CalcMolFormula(mol)
-            self.send_files_to_load((self.temp_sdf.name, name))
+        if complexes:
+            self.add_to_workspace(complexes)
 
         self.inp_smiles.input_text = ''
         btn.unusable = False
         self.update_content([self.inp_smiles, btn])
-
-    def smiles_to_mol(self, smiles):
-        mol = Chem.MolFromSmiles(smiles.strip())
-        if mol is None:
-            return None
-
-        mol = Chem.AddHs(mol)
-        AllChem.EmbedMolecule(mol, randomSeed=0)
-        return mol
 
     def complexes_to_strings(self, complexes):
         strings = []
@@ -117,6 +84,36 @@ class SmilesLoader(nanome.PluginInstance):
             strings.append('\n'.join(lines))
 
         return strings
+
+    def strings_to_complexes(self, strings):
+        complexes = []
+
+        for string in strings:
+            mols = []
+            with Chem.SDWriter(self.temp_sdf.name) as w:
+                for smiles in string.split('\n'):
+                    mol = Chem.MolFromSmiles(smiles.strip())
+                    if mol is None:
+                        continue
+                    mol = Chem.AddHs(mol)
+                    AllChem.EmbedMolecule(mol, randomSeed=0)
+                    mol.SetProp('SMILES', smiles)
+                    mols.append(mol)
+                    w.write(mol)
+
+            if not mols:
+                continue
+
+            complex = Complex.io.from_sdf(path=self.temp_sdf.name)
+            name = 'series' if len(mols) > 1 else AllChem.CalcMolFormula(mols[0])
+            complex.name = 'SMILES ' + name
+            complexes.append(complex)
+
+        if not complexes:
+            msg = 'RDKit could not parse the SMILES.'
+            self.send_notification(NotificationTypes.error, msg)
+
+        return complexes
 
 
 def main():
