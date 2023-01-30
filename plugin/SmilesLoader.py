@@ -91,6 +91,7 @@ class SmilesLoader(nanome.PluginInstance):
         for string in strings:
             mols = []
             with Chem.SDWriter(self.temp_sdf.name) as w:
+                w.SetForceV3000(True)
                 for smiles in string.split('\n'):
                     mol = Chem.MolFromSmiles(smiles.strip())
                     if mol is None:
