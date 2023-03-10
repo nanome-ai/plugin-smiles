@@ -6,6 +6,7 @@ from nanome.util.enums import Integrations, NotificationTypes
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
+import re
 import tempfile
 
 
@@ -92,7 +93,7 @@ class SmilesLoader(nanome.PluginInstance):
             mols = []
             with Chem.SDWriter(self.temp_sdf.name) as w:
                 w.SetForceV3000(True)
-                for smiles in string.split('\n'):
+                for smiles in re.split('[\n.]', string):
                     mol = Chem.MolFromSmiles(smiles.strip())
                     if mol is None:
                         continue
